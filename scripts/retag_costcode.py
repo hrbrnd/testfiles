@@ -18,7 +18,7 @@ This script is useful for standardizing EC2 cost code tags across regions.
      - 11/19/24: Initial version
 """
 
-from aws_methods import get_credentials, get_all_regions
+from methods.aws_methods import get_credentials, get_all_regions
 import re
 
 def get_invalid_ec2_costcodes(aws_profile, regions):
