@@ -184,8 +184,8 @@ def calculate_total_ebs_size(ec2_client, instance_id):
 
 def main():
     #set aws profile
-    aws_profile = "hbm"
-    base_output_filename = "D:\\HBM\\Documents\\Personal\\CertsLearning\\boto3-AWS-oreilly\\pythonProject\\Output\\instance_tags_with_details.csv"
+    aws_profile = ""
+    base_output_filename = ""
 
     ec2_client = get_credentials(aws_profile)
     regions  = get_all_regions(ec2_client)
