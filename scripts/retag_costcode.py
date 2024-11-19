@@ -1,5 +1,6 @@
 """
-Date Created: 11/19/24
+.DATE_CREATED
+2024-11-19
 
 .DESCRIPTION
 1. Get AWS credentials via boto3 (using a specific profile).
@@ -15,11 +16,38 @@ Date Created: 11/19/24
 This script is useful for standardizing EC2 cost code tags across regions.
 
 .CHANGE_LOG
-     - 11/19/24: Initial version
+- [2024-11-19] Initial version created.
 """
 
-from methods.aws_methods import get_credentials, get_all_regions
+import boto3
+import boto3.session
 import re
+
+def get_credentials(aws_profile, region = "us-east-1", service = "ec2"):
+    """
+    Get the AWS credentials for local runs
+    
+    :param profile_name: The AWS CLI profile name to use.
+    :param region: region to use.
+    :param service: client service to connect to.
+    :return: List of region names (e.g., ['us-east-1', 'us-west-2']).
+    """
+    aws_con = boto3.session.Session(profile_name = aws_profile, region_name = region)
+    ec2_client = aws_con.client(service)
+
+    return ec2_client
+
+def get_all_regions(ec2_client):
+    """
+    Get the list of all available AWS regions.
+    
+    :param profile_name: The AWS CLI profile name to use.
+    :return: List of region names (e.g., ['us-east-1', 'us-west-2']).
+    """
+    region_response = ec2_client.describe_regions()
+    regions = [region["RegionName"] for region in region_response["Regions"]]
+
+    return regions
 
 def get_invalid_ec2_costcodes(aws_profile, regions):
 
@@ -46,7 +74,6 @@ def get_invalid_ec2_costcodes(aws_profile, regions):
                             "invalid_costcode": costcode_value
                 })
     return instances_info
-
 
 def determine_costcode_values(invalid_costcode):
 
@@ -79,11 +106,9 @@ def assign_costcodes(ec2_client, instanceId, valid_costcode):
             ]
         )
 
-
-
 def main():
     #set aws profile
-    aws_profile = ""
+    aws_profile = "hbm"
 
     ec2_client = get_credentials(aws_profile) 
     regions  = get_all_regions(ec2_client)
