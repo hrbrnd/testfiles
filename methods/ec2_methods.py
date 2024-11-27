@@ -1,12 +1,13 @@
 from methods.aws_methods import *
 
-def get_all_regions(ec2_client):
+def get_all_regions(aws_profile):
     """
     Get the list of all available AWS regions.
     
     :param profile_name: The AWS CLI profile name to use.
     :return: List of region names (e.g., ['us-east-1', 'us-west-2']).
     """
+    ec2_client = get_credentials(aws_profile)
     region_response = ec2_client.describe_regions()
     regions = [region["RegionName"] for region in region_response["Regions"]]
 

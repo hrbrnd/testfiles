@@ -1,5 +1,8 @@
-def get_s3_buckets(s3_client, region):
+from methods.aws_methods import get_credentials
+def get_s3_buckets(aws_profile):
     """Get S3 buckets in a given region"""
+
+    s3_client = get_credentials(aws_profile, service="s3")
     s3_data = []
     
     # List all buckets in the account
