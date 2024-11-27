@@ -6,11 +6,11 @@ from methods.networking import get_vpcs, get_security_groups, get_load_balancers
 
 def main():
     #set aws profile
-    aws_profile = "hbm"
-    base_s3_file = "D:\\HBM\\Documents\\Personal\\CertsLearning\\boto3-AWS-oreilly\\pythonProject\\Output\\list_all_s3buckets.csv"
-    base_vpc_file = "D:\\HBM\\Documents\\Personal\\CertsLearning\\boto3-AWS-oreilly\\pythonProject\\Output\\list_all_vpcs.csv"
-    base_sg_file = "D:\\HBM\\Documents\\Personal\\CertsLearning\\boto3-AWS-oreilly\\pythonProject\\Output\\list_all_sgs.csv"
-    base_elb_file = "D:\\HBM\\Documents\\Personal\\CertsLearning\\boto3-AWS-oreilly\\pythonProject\\Output\\list_all_elbs.csv"
+    aws_profile = ""
+    base_s3_file = ""
+    base_vpc_file = ""
+    base_sg_file = ""
+    base_elb_file = ""
 
     #headers
     s3_headers = ["Region", "BucketName", "CreationDate", "Tags"]
