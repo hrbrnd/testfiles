@@ -1,7 +1,7 @@
-from methods.aws_methods import *
-from methods.ec2_methods import get_all_regions
-from methods.s3_methods import get_s3_buckets
-from methods.file_methods import write_to_csv, generate_output_filename
+from aws_methods import get_credentials
+from ec2_methods import get_all_regions
+from s3_methods import get_s3_buckets
+from file_methods import write_to_csv, generate_output_filename
 
 
 def main():
@@ -14,7 +14,7 @@ def main():
     regions  = get_all_regions(ec2_client)
 
     #headers
-    s3_headers = ["BucketName", "CreationDate", "Tags"]
+    s3_headers = ["Region", "BucketName", "CreationDate", "Tags"]
 
     for region in regions:
         s3_buckets = get_s3_buckets(s3_client, region)
