@@ -1,29 +1,28 @@
 ﻿Issue Type,Summary,Epic Name,Epic Link
 Epic,AWS Account Refactoring and Optimization,AWS Account Refactoring and Optimization,
-Story,Investigate EC2 Instances for ownership and optimization,AWS Account Refactoring and Optimization,
-Story,Analyze EBS storage for ownership and optimization,AWS Account Refactoring and Optimization,
-Story,Review and Document Other AWS Resources,AWS Account Refactoring and Optimization,
-Story,Reorganize AWS Accounts by Environment and Ownership as needed,AWS Account Refactoring and Optimization,
 Story,Identify Opportunities for Cost Savings in AWS,AWS Account Refactoring and Optimization,
+Story,Investigate EC2 Instances for ownership and optimization,AWS Account Refactoring and Optimization,
+Story,Investigate EBS storage for ownership and optimization,AWS Account Refactoring and Optimization,
+Story,Review and Document Other AWS Resources,AWS Account Refactoring and Optimization,
+Story,Reorganize AWS Accounts by Environment and Ownership,AWS Account Refactoring and Optimization,
 Story,Migrate Resources to New AWS Accounts as needed,AWS Account Refactoring and Optimization,
-Story,Upgrade or Replace Legacy AWS Resources,AWS Infrastructure Enhancements,
+Story,Upgrade or Replace Legacy AWS Resources,AWS Account Refactoring and Optimization,
 ,,,
 Epic,Terraform Adoption and Standardization,Terraform Adoption and Standardization,
+Story,Terraform Adoption and Standardization,Terraform Adoption and Standardization,[Epic Name]
 Story,Establish Terraform Best Practices and Usage,Terraform Adoption and Standardization,[Epic Name]
-Story,Eliminate Manual Changes and Implement Terraform Team Norms ,Terraform Adoption and Standardization,[Epic Name]
-Story,Create a Repository to House Imported Applications,Terraform Adoption and Standardization,[Epic Name]
+Story,Eliminate Manual Changes ,Terraform Adoption and Standardization,[Epic Name]
+Story,Create Repositories to House Imported Applications,Terraform Adoption and Standardization,[Epic Name]
 Story,"Import Networking Resources (VPC, Security Groups) into Terraform",Terraform Adoption and Standardization,[Epic Name]
-Story,"Import Compute Resources (Lambda, EC2, RDS, FSx, S3) into Terraform",Terraform Adoption and Standardization,[Epic Name]
+Story,"Import Compute Resources (Lambda, EC2, RDS, FSx, S3) into Terraform",Terraform Adoption and Standardization,
 ,,,
 Epic,AWS Security and Compliance Review,AWS Security and Compliance Review,
 Story,"Perform AWS Security Assessment (IAM Roles, Policies, Security Groups, etc.)",AWS Security and Compliance Review,
-Story,Review Compliance and Audit Requirements,AWS Security and Compliance Review,
 Story,Review AWS Config Rules for Ongoing Security Monitoring,AWS Security and Compliance Review,
 ,,,
 Epic,Monitoring and Alerting Enhancements,Monitoring and Alerting Enhancements,
-Story,Implement CloudWatch Monitoring for AWS Resources,Monitoring and Alerting Enhancements,
+Story,Restructure CloudWatch Monitoring for AWS Resources,Monitoring and Alerting Enhancements,
 Story,Configure AWS Cost Explorer and Budgets for Cost Management,Monitoring and Alerting Enhancements,
-Story,Implement AWS GuardDuty for Security Monitoring,Monitoring and Alerting Enhancements,
 Story,Configure Alerts for Resource Optimization and Anomalies,Monitoring and Alerting Enhancements,
 ,,,
 Epic,Resource Documentation and Knowledge Management,Resource Documentation and Knowledge Management,
@@ -33,10 +32,8 @@ Story,Create Knowledge Base for AWS Operations,Resource Documentation and Knowle
 ,,,
 Epic,Automation and CI/CD Integration,Automation and CI/CD Integration,
 Story,Integrate Terraform with CI/CD Pipeline for AWS Deployments,Automation and CI/CD Integration,
-Story,Set Up Terraform State Management and Remote Backends,Automation and CI/CD Integration,
 Story,Automate Infrastructure Testing and Validation,Automation and CI/CD Integration,
 ,,,
 Epic,Cost Forecasting and Reporting,Cost Forecasting and Reporting,
 Story,Set up AWS Cost Anomaly Detection,Cost Forecasting and Reporting,
 Story,Create Monthly and Quarterly Cost Reports,Cost Forecasting and Reporting,
-Story,Implement AWS Cost Explorer for Detailed Cost Analysis,Cost Forecasting and Reporting,
