@@ -31,15 +31,27 @@ def get_route_tables(aws_profile, regions):
         paginator = ec2_client.get_paginator("describe_route_tables")
         for page in paginator.paginate():
             for tables in page['RouteTables']:
+                main_route_table = "N/A"  # Default value
+                subnets = []  # List to hold all associated subnets for the route table
+
+                # Loop through Associations to check for Main route table and gather subnet info
+                for association in tables.get('Associations', []):
+                    if association.get("Main"):
+                        main_route_table = "Yes"  # Mark as main route table
+                    subnet = association.get("SubnetId")
+                    if subnet:
+                        subnets.append(subnet)  # Collect associated subnets
+
+                # Process each route for the route table
                 for routes in tables['Routes']:
                     destination = (
                         routes.get("DestinationCidrBlock") or
                         routes.get("DestinationIpv6CidrBlock") or
-                        routes.get("DestinationPrefixListId ") or
+                        routes.get("DestinationPrefixListId") or
                         "N/A"
                     )
 
-                    # Getting target with or conditions
+                    # Getting target with OR conditions
                     target = (
                         routes.get("EgressOnlyInternetGatewayId") or
                         routes.get("GatewayId") or
@@ -47,31 +59,31 @@ def get_route_tables(aws_profile, regions):
                         routes.get("NatGatewayId") or
                         routes.get("TransitGatewayId") or
                         routes.get("LocalGatewayId") or
-                        routes.get("CarrierGatewayId ") or
-                        routes.get("NetworkInterfaceId ") or
+                        routes.get("CarrierGatewayId") or
+                        routes.get("NetworkInterfaceId") or
                         routes.get("VpcPeeringConnectionId") or
                         routes.get("CoreNetworkArn") or
                         "N/A"
                     )
+
                     state = routes.get("State", "N/A")
-                for association in tables['Associations']:
-                    main_route_table = association.get("Main")
-                    subnet = association.get("SubnetId")
-                row = [
-                    region,
-                    tables["VpcId"],
-                    tables["RouteTableId"],
-                    destination,
-                    target,
-                    state,
-                    tables.get("OwnerId", "N/A"),  # AWS Account Owner
-                    main_route_table,
-                    subnet,
-                    tables.get("RouteTableAssociationId", "N/A"),  # Association ID
-                    routes.get("PropagatingVgws", "N/A"),  # Propagating VGWs (useful for VPN)
-                ]
-                rt_tables_details.append(row)
+
+                    # Add a new row for each route
+                    row = [
+                        region,
+                        tables["VpcId"],
+                        tables["RouteTableId"],
+                        destination,
+                        target,
+                        state,
+                        tables.get("OwnerId", "N/A"),  # AWS Account Owner
+                        main_route_table,  # Whether it's the main route table for the VPC
+                        ",".join(subnets) if subnets else "N/A"  # Associated Subnets (comma-separated)
+                    ]
+                    rt_tables_details.append(row)
+
     return rt_tables_details
+
 
 def get_load_balancers(aws_profile, regions):
     """Get all load balancers (ALB and NLB) in the specified region."""

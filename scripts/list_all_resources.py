@@ -7,18 +7,14 @@ from methods.serverless_methods import get_lambda
 
 def main():
     #set aws profile
-    aws_profile = ""
-    base_s3_file = ""
-    base_vpc_file = ""
-    base_sg_file = ""
-    base_elb_file = ""
+
 
     #headers
     s3_headers = ["Region", "BucketName", "CreationDate", "Tags"]
     vpc_headers = ["Region", "VPCId", "CidrBlock", "IsDefault", "Tags"]
     sg_headers = ["Region", "GroupId", "GroupName", "Description", "Tags"]
     lb_headers = ["Region", "LoadBalancerName", "DNSName", "CreatedTime", "Type", "State", "Tags"]  
-    rt_headers = ["Region", "VpcId", "RouteTableId", "destination", "target", "State", "RTable_Owner", "Main", "RouteTableAssociationId", "PropagatingVgws"]   
+    rt_headers = ["Region", "VpcId", "RouteTableId", "destination", "target", "State", "RTable_Owner", "Main", "Linked_Subnets"]   
 
     regions  = get_all_regions(aws_profile)
 
