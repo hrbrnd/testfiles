@@ -7,12 +7,11 @@ from methods.serverless_methods import get_lambda
 
 def main():
     #set aws profile
-    aws_profile = "hbm"
-    base_s3_file = "D:\\HBM\\Documents\\Personal\\CertsLearning\\boto3-AWS-oreilly\\pythonProject\\Output\\list_all_s3buckets"
-    base_vpc_file = "D:\\HBM\\Documents\\Personal\\CertsLearning\\boto3-AWS-oreilly\\pythonProject\\Output\\list_all_vpcs"
-    base_sg_file = "D:\\HBM\\Documents\\Personal\\CertsLearning\\boto3-AWS-oreilly\\pythonProject\\Output\\list_all_sgs"
-    base_elb_file = "D:\\HBM\\Documents\\Personal\\CertsLearning\\boto3-AWS-oreilly\\pythonProject\\Output\\list_all_elbs"
-    base_rt_tables_file = "D:\\HBM\\Documents\\Personal\\CertsLearning\\boto3-AWS-oreilly\\pythonProject\\Output\\list_all_route_tables"
+    aws_profile = ""
+    base_s3_file = ""
+    base_vpc_file = ""
+    base_sg_file = ""
+    base_elb_file = ""
 
     #headers
     s3_headers = ["Region", "BucketName", "CreationDate", "Tags"]
