@@ -19,7 +19,7 @@ def main():
     vpc_headers = ["Region", "VPCId", "CidrBlock", "IsDefault", "Tags"]
     sg_headers = ["Region", "GroupId", "GroupName", "Description", "Tags"]
     lb_headers = ["Region", "LoadBalancerName", "DNSName", "CreatedTime", "Type", "State", "Tags"]  
-    rt_headers = ["Region", "VpcId", "RouteTableId", "destination", "target", "State", "RTable_Owner", "Main", "SubnetID", "RouteTableAssociationId", "PropagatingVgws"]   
+    rt_headers = ["Region", "VpcId", "RouteTableId", "destination", "target", "State", "RTable_Owner", "Main", "RouteTableAssociationId", "PropagatingVgws"]   
 
     regions  = get_all_regions(aws_profile)
 
