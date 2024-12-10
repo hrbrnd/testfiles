@@ -94,7 +94,7 @@ def assign_costcodes(ec2_client, instanceId, valid_costcode):
 
     if valid_costcode:
         ec2_client.create_tags(
-            DryRun=True,
+            DryRun=False,
             Resources=[
                 instanceId,
             ],
