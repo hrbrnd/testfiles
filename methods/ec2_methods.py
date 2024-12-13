@@ -322,7 +322,6 @@ def get_ebs_snapshots_for_instance(instance_id, aws_profile, region_id):
     
     # Initialize lists for snapshot IDs and snapshot sizes
     snapshot_ids = []
-    snapshot_sizes = []
     
     for reservation in response['Reservations']:
         for instance in reservation['Instances']:
@@ -338,10 +337,8 @@ def get_ebs_snapshots_for_instance(instance_id, aws_profile, region_id):
                     ])
                     
                     for snapshot in snapshots_response['Snapshots']:
-                        snapshot_ids.append(snapshot['SnapshotId'])
-                        snapshot_sizes.append(snapshot['VolumeSize'])  # Size in GB
-    
-    return snapshot_ids, snapshot_sizes
+                        snapshot_ids.append(snapshot['SnapshotId'])    
+    return snapshot_ids
 
 def calculate_storage_costs(size_in_gb, cost_per_gb_per_month):
     """
@@ -352,3 +349,19 @@ def calculate_storage_costs(size_in_gb, cost_per_gb_per_month):
     :return: The total cost of the storage.
     """
     return size_in_gb * cost_per_gb_per_month
+
+def estimate_snapshot_cost(total_ebs_gb, change_rate_per_day=.03, days = 10, backup_price_per_gb = .05):
+    """
+    Calculate the estimated cost for AWS backup storage based on the formula.
+    
+    :param total_ebs_gb: Total size of EBS volumes in GB
+    :param change_rate_per_day: Percentage of change per day (e.g., 5% as 0.05)
+    :param days: The number of days over which the change occurs
+    :param backup_price_per_gb: Cost per GB per month for AWS backup storage
+    
+    :return: Estimated monthly cost
+    """
+    # Apply the formula
+    cost = total_ebs_gb * (1 + change_rate_per_day * days) * backup_price_per_gb
+    
+    return cost

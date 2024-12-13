@@ -1,49 +1,52 @@
-from methods.ec2_methods import get_all_regions, get_stopped_instances_grt_90days, get_ebs_snapshots_for_instance, calculate_storage_costs, calculate_total_ebs_size
+from methods.ec2_methods import get_all_regions, get_stopped_instances_grt_90days, get_ebs_snapshots_for_instance, calculate_storage_costs, calculate_total_ebs_size, estimate_snapshot_cost
 from methods.file_methods import write_to_csv, generate_output_filename
 
 
 from datetime import datetime, timedelta, timezone
 
-#minimum costs, might vary slightly per region
-SNAPSHOT_COST_PER_GB_PER_MONTH = 0.05  
-VOLUME_COST_PER_GB_PER_MONTH = 0.08  
+
 
 def main():
-    aws_profile = ""
-    base_output_filename = ""
+    #minimum costs, might vary slightly per region
+    SNAPSHOT_COST_PER_GB_PER_MONTH = 0.05  
+    VOLUME_COST_PER_GB_PER_MONTH = 0.08  
+    
+    aws_profile = "hbm"
+    base_output_filename = "D:\\HBM\\Documents\\Personal\\CertsLearning\\boto3-AWS-oreilly\\pythonProject\\Output"
     
     header = [
         "Region", "InstanceId", "Name", "CostCenter", "InstanceType", "Instance_State", 
         "LaunchTime", "PrivateIpAddress", "State_Transition", "Report_RunTime", "Time_Since_Last_Started", 
-        "Error", "Snapshots", "Total_EBS_Size", "Total_Snapshot_Sizes", "Snapshot_Cost", "Volume_Cost"
+        "Error", "Snapshots", "Total_EBS_Size", "Estimate_Snapshot_Cost", "Volume_Cost"
     ]
     
     regions = get_all_regions(aws_profile)
 
     # Get stopped instances that have been stopped for more than 90 days
-    instance_rows = get_stopped_instances_grt_90days(aws_profile, regions, days = 90)
-    
+    instance_rows = get_stopped_instances_grt_90days(aws_profile, regions, days = 1)
+
     # Loop through the instance rows to calculate snapshot and volume costs
     for row in instance_rows:
         instance_id = row[1]
         region_id = row[0]
 
-        # Fetch snapshots and snapshot sizes
-        snapshots, snapshot_sizes = get_ebs_snapshots_for_instance(instance_id, aws_profile, region_id)
-        
-        # Calculate snapshot cost (using generalized method)
-        snapshot_cost = calculate_storage_costs(sum(snapshot_sizes), SNAPSHOT_COST_PER_GB_PER_MONTH)
+        # Fetch snapshots
+        snapshots = get_ebs_snapshots_for_instance(instance_id, aws_profile, region_id)
         
         # Calculate the total EBS volume size (you can use the existing calculate_total_ebs_size method)
-        total_ebs_size = calculate_total_ebs_size(aws_profile, region_id, instance_id)  
+        total_ebs_size = calculate_total_ebs_size(aws_profile, region_id, instance_id)
+        
+        snapshot_cost = ""
+        if snapshots:
+            snapshot_cost = estimate_snapshot_cost(total_ebs_size)
+
         volume_cost = calculate_storage_costs(total_ebs_size, VOLUME_COST_PER_GB_PER_MONTH)
         
         # Append snapshot and volume data to the row
-        row.append(snapshots)  # Add the snapshots
+        row.append(snapshots)  
         row.append(total_ebs_size)
-        row.append(snapshot_sizes)  # Add snapshot sizes
-        row.append(snapshot_cost)  # Add snapshot cost
-        row.append(volume_cost)  # Add volume cost (EBS size cost)
+        row.append(snapshot_cost)  
+        row.append(volume_cost)  
 
     # Generate the output filename for the CSV
     output_file = generate_output_filename(base_output_filename)
