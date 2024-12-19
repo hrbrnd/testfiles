@@ -20,7 +20,6 @@ def get_vpcs(aws_profile, regions):
                 vpc_details.append(row)
     return vpc_details
 
-
 def get_route_tables(aws_profile, regions):
     """Get all VPCs in the specified region."""
     
@@ -83,7 +82,6 @@ def get_route_tables(aws_profile, regions):
                     rt_tables_details.append(row)
 
     return rt_tables_details
-
 
 def get_load_balancers(aws_profile, regions):
     """Get all load balancers (ALB and NLB) in the specified region."""
