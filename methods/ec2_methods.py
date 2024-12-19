@@ -37,6 +37,24 @@ def get_instance_tags(aws_profile, regions):
     tag_keys = sorted(tag_keys)
     return tag_keys
 
+def get_ebs_tags(aws_profile, regions, vol_filter):
+
+    tag_keys = set()
+
+    for region in regions:
+        ec2_client = get_credentials(aws_profile, region)
+        paginator = ec2_client.get_paginator("describe_volumes")
+
+        for page in paginator.paginate(Filters=[vol_filter]):
+            for vol in page["Volumes"]:
+                for tags in vol.get("Tags", []):
+                    tag_keys.add(tags["Key"])
+    
+    tag_keys = sorted(tag_keys)
+    
+    return tag_keys
+
+
 def get_instance_details(aws_profile, regions, tag_keys):
     """
     Retrieve details of all EC2 instances including tags, across multiple regions.
@@ -83,6 +101,45 @@ def get_instance_details(aws_profile, regions, tag_keys):
                     instance_details.append(row)
 
     return instance_details
+
+def get_ebs_details(aws_profile, regions, tag_keys):
+    """
+    Retrieve details of all EBS volumes including tags, across multiple regions.
+    
+    :param aws_con: The boto3 session object.
+    :param regions: List of region names to query.
+    :param tag_keys: List of tag keys to extract from instances.
+    :return: List of rows with ebs details and corresponding tag values.
+    """    
+
+    vol_filter = {'Name': 'status','Values': ['available']}
+
+    ebs_details = []
+
+    for region in regions:
+        ec2_client = get_credentials(aws_profile, region)
+        paginator = ec2_client.get_paginator("describe_volumes")
+
+        for page in paginator.paginate(Filters=[vol_filter]):
+            for vol in page["Volumes"]:
+                row = [
+                    region,
+                    vol["VolumeId"],
+                    vol["VolumeType"],
+                    vol["Size"],                    
+                    vol["Encrypted"],
+                    vol["State"],
+                    vol.get("SnapshotId", ""),
+                    vol["CreateTime"].strftime('%Y-%m-%d %H:%M:%S')
+                ]
+
+                tags_dict = { tag['Key']: tag['Value'] for tag in vol.get("Tags", [])}
+
+                row.extend(tags_dict.get(key, '') for key in tag_keys)               
+
+                ebs_details.append(row)
+
+    return ebs_details
 
 def calculate_total_ebs_size(aws_profile, region_id, instance_id):
     """
@@ -225,7 +282,7 @@ def get_instance_details_from_file(aws_profile, tag_keys, file_path):
 
     return instance_details
 
-def get_stopped_instances_grt_90days(aws_profile, regions, days = 90):
+def get_stopped_instances_grt_90days(aws_profile, regions, stopped_days = 90):
     from datetime import datetime, timedelta, timezone
     
     current_time = datetime.now(timezone.utc)
@@ -264,7 +321,7 @@ def get_stopped_instances_grt_90days(aws_profile, regions, days = 90):
                             # Get Tags for instance
                             tags = {tag["Key"].lower(): tag["Value"] for tag in instance.get("Tags", [])}
 
-                            if time_diff >= timedelta(days):  # 90 days in timedelta
+                            if time_diff >= timedelta(days = stopped_days):  # 90 days in timedelta
                                 row = [
                                     region,
                                     instance["InstanceId"],
@@ -304,41 +361,53 @@ def get_stopped_instances_grt_90days(aws_profile, regions, days = 90):
     
     return instance_details
 
-def get_ebs_snapshots_for_instance(instance_id, aws_profile, region_id):
+def get_ebs_snapshots(resource, aws_profile, region_id):
     """
-    Retrieve all EBS snapshots for a specific EC2 instance.
+    Retrieve all snapshots for a specified resource. This function can be extended in the future to support additional AWS resources.
 
-    :param instance_id: The EC2 instance ID for which to find the snapshots.
+    :param instance_id: The resource ID (Instance id, volume ID, ...) for which to find the snapshots.
     :param aws_profile: The AWS profile to use for credentials.
     :return: A tuple containing:
              - A list of snapshot IDs
-             - A list of snapshot sizes (in GB)
     """
     # Create a session with the specified AWS profile
     ec2_client = get_credentials(aws_profile, region_id)
-    
-    # Get the instance's block device mappings to extract the attached volumes
-    response = ec2_client.describe_instances(InstanceIds=[instance_id])
-    
+
     # Initialize lists for snapshot IDs and snapshot sizes
     snapshot_ids = []
+
+    if resource.startswith("i-"):
+        instance_id = resource
+        response = ec2_client.describe_instances(InstanceIds=[instance_id])
+
+        for reservation in response['Reservations']:
+            for instance in reservation['Instances']:
+                # Check for the 'BlockDeviceMappings' field (attached volumes)
+                if 'BlockDeviceMappings' in instance:
+                    for block_device in instance['BlockDeviceMappings']:
+                        # Get the volume ID from the block device mapping
+                        volume_id = block_device['Ebs']['VolumeId']
+                        
+                        # Fetch snapshots for this volume
+                        snapshots_response = ec2_client.describe_snapshots(Filters=[
+                            {'Name': 'volume-id', 'Values': [volume_id]}
+                        ])
+                        
+                        for snapshot in snapshots_response['Snapshots']:
+                            snapshot_ids.append(snapshot['SnapshotId'])    
+    elif resource.startswith("vol-"):
+        volume_id = resource
+
+        # Fetch snapshots for this volume
+        snapshots_response = ec2_client.describe_snapshots(Filters=[
+            {'Name': 'volume-id', 'Values': [volume_id]}
+        ])
+        
+        for snapshot in snapshots_response['Snapshots']:
+            snapshot_ids.append(snapshot['SnapshotId'])  
     
-    for reservation in response['Reservations']:
-        for instance in reservation['Instances']:
-            # Check for the 'BlockDeviceMappings' field (attached volumes)
-            if 'BlockDeviceMappings' in instance:
-                for block_device in instance['BlockDeviceMappings']:
-                    # Get the volume ID from the block device mapping
-                    volume_id = block_device['Ebs']['VolumeId']
-                    
-                    # Fetch snapshots for this volume
-                    snapshots_response = ec2_client.describe_snapshots(Filters=[
-                        {'Name': 'volume-id', 'Values': [volume_id]}
-                    ])
-                    
-                    for snapshot in snapshots_response['Snapshots']:
-                        snapshot_ids.append(snapshot['SnapshotId'])    
     return snapshot_ids
+
 
 def calculate_storage_costs(size_in_gb, cost_per_gb_per_month):
     """
@@ -348,20 +417,72 @@ def calculate_storage_costs(size_in_gb, cost_per_gb_per_month):
     :param cost_per_gb_per_month: The cost per GB per month.
     :return: The total cost of the storage.
     """
-    return size_in_gb * cost_per_gb_per_month
+    cost = size_in_gb * cost_per_gb_per_month
 
-def estimate_snapshot_cost(total_ebs_gb, change_rate_per_day=.03, days = 10, backup_price_per_gb = .05):
+    return round(cost, 2)
+
+def estimate_snapshot_cost(total_ebs_gb, utilization_percentage=.5, calculate_incremental = False, change_rate_per_day=0.03, days=30, backup_price_per_gb=0.05):
     """
-    Calculate the estimated cost for AWS backup storage based on the formula.
+    Estimate the cost of EBS snapshots considering full and incremental snapshots.
     
-    :param total_ebs_gb: Total size of EBS volumes in GB
-    :param change_rate_per_day: Percentage of change per day (e.g., 5% as 0.05)
-    :param days: The number of days over which the change occurs
-    :param backup_price_per_gb: Cost per GB per month for AWS backup storage
+    :param total_ebs_gb: Total size of EBS volume in GB
+    :param utilization_percentage: Fraction of the volume that is actively used (e.g., 0.5 for 50%)
+    :param calculate_incremental: Dictates if incremental cost estimate will be done
+    :param change_rate_per_day: Percentage of data that changes per day (e.g., 3% as 0.03)
+    :param days: Number of days to consider for the estimate (typically 30 for monthly)
+    :param backup_price_per_gb: Cost per GB per month for backup storage
     
-    :return: Estimated monthly cost
+    :return: Estimated cost for snapshots
     """
-    # Apply the formula
-    cost = total_ebs_gb * (1 + change_rate_per_day * days) * backup_price_per_gb
+    # Calculate the used data (total * utilization percentage)
+    used_data = total_ebs_gb * utilization_percentage
     
-    return cost
+    # First snapshot cost (charged only for the used data)
+    first_snapshot_cost = used_data * backup_price_per_gb
+    
+    # Incremental snapshot cost: we estimate the data that changes over the given period
+    changed_data = used_data * change_rate_per_day * days
+    
+    incremental_snapshot_cost = 0
+    if calculate_incremental:
+        # Incremental snapshots store only the changed data, so we estimate the cost for that
+        incremental_snapshot_cost = changed_data * backup_price_per_gb
+    
+    # Total estimated cost: full snapshot cost + incremental snapshot costs
+    total_cost = first_snapshot_cost + incremental_snapshot_cost
+    
+    return round(total_cost, 2)
+
+def create_snapshot(aws_profile, region, volume_id, description, tags):
+    
+    resources = [] 
+    ec2_client = get_credentials(aws_profile, region)
+    
+    # Create the snapshot
+    snapshot = ec2_client.create_snapshot(
+        VolumeId=volume_id,
+        Description=description
+    )
+    
+    # Extract the snapshot ID
+    snapshot_id = snapshot['SnapshotId']
+    
+    # Wait for the snapshot to be completed
+    waiter = ec2_client.get_waiter('snapshot_completed')
+    try:
+        waiter.wait(SnapshotIds=[snapshot_id])
+    except Exception as e:
+        print(f"Snapshot creation failed in {region}: {e}")
+        return None
+    
+    # Add tags to the snapshot
+    ec2_client.create_tags(
+        Resources=[snapshot_id],
+        Tags=tags
+    )
+    
+    resources.append(region)
+    resources.append(volume_id)
+    resources.append(snapshot_id)
+
+    return resources
