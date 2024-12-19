@@ -23,3 +23,9 @@ def generate_output_filename(base_filename):
     """
     current_date = datetime.now().strftime('%Y-%m-%d')
     return f"{base_filename}_{current_date}.csv"  
+
+def import_csv_file(file_path):
+    with open(file_path, mode='r', encoding='utf-8-sig') as file:
+        file_pairs = [line.strip().split(',') for line in file]
+    
+    return file_pairs
